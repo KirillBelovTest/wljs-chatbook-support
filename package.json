@@ -7,7 +7,7 @@
   },
   "defaultPackage": true,
   "wljs-meta": {
-    "jsmodule": "dist/kernel.js",
+    "jsmodule": "src/kernel.js",
     "wl": "src/processor.wl"
   },
   "repository": {
