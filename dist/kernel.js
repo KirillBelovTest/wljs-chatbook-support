@@ -1,6 +1,4 @@
-let mermaidDiagrams = false;
-
-class MermaidCell {
+class ChatbookOutputCell {
   dispose() {
     
   }
@@ -15,32 +13,15 @@ class MermaidCell {
     parent.element.appendChild(elt);
     parent.element.classList.add('padding-fix');
   
-    let cotainer = document.createElement("div");
-    
-
-    if (!mermaidDiagrams) {
-      import('./mermaid.core-9eb75b2e.js').then(function (n) { return n.aJ; }).then(({ default: mermaid }) => {
-        mermaidDiagrams = mermaid;
-        mermaidDiagrams.initialize({ startOnLoad: false });
-        mermaidDiagrams.render('mermaid-'+uid, data).then((data)=>{
-          const {svg, bindFunctions} = data;
-          cotainer.innerHTML = svg;
-        });  
-      });
-    
-    } else {
-      mermaidDiagrams.render('mermaid-'+uid, data).then((data)=>{
-        const {svg, bindFunctions} = data;
-        cotainer.innerHTML = svg;
-      });
-    }
+    let container = document.createElement("div");
+    container.innerText = data;
   
-    elt.appendChild(cotainer);
+    elt.appendChild(container);
     
     return this;
   }
 }
 
-window.SupportedCells['mermaid'] = {
-  view: MermaidCell
+window.SupportedCells['chatbook'] = {
+  view: ChatbookOutputCell
 };
