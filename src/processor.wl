@@ -24,7 +24,7 @@ Module[{str, lines, params},
   callback[
       str,
       CreateUUID[], 
-      "mermaid",
+      "chatbook",
       Null
   ];
 ];
