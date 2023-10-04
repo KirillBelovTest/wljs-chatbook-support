@@ -7,7 +7,7 @@ Begin["`Private`"];
 ChatbookQ[___] := False
 
 
-ChatbookQ[str_String] := StringMatchQ[str, StartOfString ~~ ".llm"]
+ChatbookQ[str_String] := StringMatchQ[str, StartOfString ~~ ".llm" ~~ __]
 
 
 ChatbookProcessor[expr_String, signature_String, callback_] := 
