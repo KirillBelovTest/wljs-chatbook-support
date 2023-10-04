@@ -1,11 +1,7 @@
-Global`llmFunc::usage = 
-"llmFunc[text]"; 
+PacletInstall["ChristopherWolfram/OpenAILink"]
 
 
-Global`llmFunc[str_] := str <> "!"
-
-
-BeginPackage["JerryI`WolframJSFrontend`MermaidSupport`"];
+BeginPackage["JerryI`WolframJSFrontend`MermaidSupport`", {"ChristopherWolfram`OpenAILink`"}];
 
 
 Begin["`Private`"];
@@ -26,15 +22,16 @@ Module[{str, lines, params},
     StringTrim[lines[[1]], (".llm" ~~ WhitespaceCharacter..) | WhitespaceCharacter..], 
     WhitespaceCharacter..
   ]; 
-  str = StringTrim[StringJoin[Rest[lines]]]; 
+  str = chatGPT[StringTrim[StringJoin[Rest[lines]]]]; 
 
   callback[
-      Global`llmFunc[str],
+      str,
       CreateUUID[], 
-      "chatbook",
+      "markdown",
       Null
   ];
 ];
+
 
 JerryI`WolframJSFrontend`Notebook`NotebookAddEvaluator[ChatbookQ -> <|
     "SyntaxChecker"->(True&), 
@@ -44,6 +41,24 @@ JerryI`WolframJSFrontend`Notebook`NotebookAddEvaluator[ChatbookQ -> <|
   |>, 
   "HighestPriority"
 ];
+
+
+$chat = {}
+
+
+chatGPT[query_String] := 
+Module[{userMessage, assistMessage}, 
+  Check[
+    userMessage = OpenAIChatMessageObject["user", query]; 
+    AppendTo[$chat, userMessage]; 
+    assistMessage = OpenAIChatComplete[$chat]; 
+    AppendTo[$chat, assistMessage]; 
+    assistMessage["Text"], 
+
+    $chat = {}; 
+    "<span style=\"color:red\">**Out of tokens. Chat history cleaned up.**</span>"
+  ]
+]; 
 
 
 End[];
