@@ -30,7 +30,7 @@ Module[{str, lines, params},
 ];
 
 JerryI`WolframJSFrontend`Notebook`NotebookAddEvaluator[ChatbookQ -> <|
-    "SyntaxChecker"->(False&), 
+    "SyntaxChecker"->(True&), 
     "Epilog"->(#&), 
     "Prolog"->(#&), 
     "Evaluator"->ChatbookProcessor
