@@ -1,3 +1,10 @@
+Global`llmFunc::usage = 
+"llmFunc[text]"; 
+
+
+Global`llmFunc[str_] := str <> "!"
+
+
 BeginPackage["JerryI`WolframJSFrontend`MermaidSupport`"];
 
 
@@ -22,7 +29,7 @@ Module[{str, lines, params},
   str = StringTrim[StringJoin[Rest[lines]]]; 
 
   callback[
-      str,
+      Global`llmFunc[str],
       CreateUUID[], 
       "chatbook",
       Null
