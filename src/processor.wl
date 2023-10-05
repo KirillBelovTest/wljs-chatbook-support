@@ -62,13 +62,15 @@ Module[{userMessage, assistMessage},
 
 DefaultSerializer = ExportByteArray[#, "ExpressionJSON"]&
 
+(* will be called directly via websocket by JS on apikey.wsp component*)
 installAPIKey[key_String] := (
-  SystemCredential["OPENAI_API_KEY"] = key;
-  WebSocketSend[Global`client, Global`Alert["API Key installed!"] // DefaultSerializer];
+  SystemCredential["OPENAI_API_KEY"] = StringTrim[key];
+  WebSocketSend[Global`client, Global`Alert["API Key installed! Probably you need to restart the system."] // DefaultSerializer];
 );
 
-root = FileNameJoin[{$InputFileName // DirectoryName // ParentDirectory}];
+root = $InputFileName // DirectoryName // ParentDirectory;
 
+(* extend the settings menu *)
 JerryI`WolframJSFrontend`Extensions`ExtendSettings[Function[Null,
   LoadPage["settings/apikey.wsp", {}, "Base"->root]
 ], "LLM OpenAI"];

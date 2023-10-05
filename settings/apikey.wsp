@@ -30,7 +30,7 @@
         i.addEventListener('blur', (val) => {
             if (i.value === "") return;
 
-            server.socket.send('KirillBelov`WolframJSFrontend`LLMSupport`Private`installAPIKey["'+'i.value'+'"]');
+            server.socket.send('KirillBelov`WolframJSFrontend`LLMSupport`Private`installAPIKey["'+i.value+'"]');
         })
     }
 </script>
