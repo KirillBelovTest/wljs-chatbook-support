@@ -1,7 +1,7 @@
 PacletInstall["ChristopherWolfram/OpenAILink"]
 
 
-BeginPackage["JerryI`WolframJSFrontend`MermaidSupport`", {"ChristopherWolfram`OpenAILink`"}];
+BeginPackage["KirillBelov`WolframJSFrontend`LLMSupport`", {"ChristopherWolfram`OpenAILink`", "JerryI`WSP`", "KirillBelov`WebSocketHandler`"}];
 
 
 Begin["`Private`"];
@@ -59,6 +59,19 @@ Module[{userMessage, assistMessage},
     "<span style=\"color:red\">**Out of tokens. Chat history cleaned up.**</span>"
   ]
 ]; 
+
+DefaultSerializer = ExportByteArray[#, "ExpressionJSON"]&
+
+installAPIKey[key_String] := (
+  SystemCredential["OPENAI_API_KEY"] = key;
+  WebSocketSend[Global`client, Global`Alert["API Key installed!"] // DefaultSerializer];
+);
+
+root = FileNameJoin[{$InputFileName // DirectoryName // ParentDirectory}];
+
+JerryI`WolframJSFrontend`Extensions`ExtendSettings[Function[Null,
+  LoadPage["settings/apikey.wsp", {}, "Base"->root]
+], "LLM OpenAI"];
 
 
 End[];
