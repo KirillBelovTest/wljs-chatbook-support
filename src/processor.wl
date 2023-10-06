@@ -25,12 +25,32 @@ Module[{str, lines, params, uuid, uuid1},
   str = chatGPT[StringTrim[StringJoin[Rest[lines]]]]; 
 
   callback[
-    "(*answer[" <> ToString[Length[$chat] / 2] <> "]*)", 
+    "(*query[" <> ToString[Length[$chat] / 2] <> "]*)", 
     uuid1 = CreateUUID[], 
     "codemirror", 
     Null, 
     "Type" -> "input"
   ]; 
+
+  callback[
+    StringTrim[StringJoin[Rest[lines]]], 
+    uuid = CreateUUID[], 
+    "markdown", 
+    Null, 
+    "Type" -> "output", 
+    "After" -> uuid1
+  ]; 
+  uuid1 = uuid; 
+
+  callback[
+    "(*answer[" <> ToString[Length[$chat] / 2] <> "]*)", 
+    uuid = CreateUUID[], 
+    "codemirror", 
+    Null, 
+    "Type" -> "input", 
+    "After" -> uuid1
+  ]; 
+  uuid1 = uuid;
 
   Table[
     callback[
@@ -109,7 +129,7 @@ Module[{l = StringSplit[code, "\n"], f, r},
     f === "html", ".html\n" <> r, 
     f === "wolfram", r,  
     f === "mathematica", r, 
-    True, ".md\n```" <> f <> "\n" <> r <> "```"
+    True, ".md\n```\n" <> f <> "\n" <> r <> "\n```"
   ]
 ]; 
 
