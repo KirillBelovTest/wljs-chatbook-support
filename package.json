@@ -1,6 +1,6 @@
 {
   "name": "wljs-chatbook-support",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Chatbook cells support for WLJS Editor",
   "scripts": {
     "build": "node --max-old-space-size=8192 ./node_modules/.bin/rollup --config rollup.config.mjs",

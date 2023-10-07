@@ -17,66 +17,17 @@ ChatbookProcessor[expr_String, signature_String, callback_] :=
 Module[{str, lines, params, uuid, uuid1}, 
   Print["ChatbookProcessor!"]; 
 
-  lines = StringSplit[expr, EndOfLine]; 
-  params = StringSplit[
-    StringTrim[lines[[1]], (".llm" ~~ WhitespaceCharacter..) | WhitespaceCharacter..], 
-    WhitespaceCharacter..
-  ]; 
-  str = chatGPT[StringTrim[StringJoin[Rest[lines]]]]; 
+  str = StringJoin[Rest[StringSplit[expr, EndOfLine]]];
 
-  callback[
-    "(*query[" <> ToString[Length[$chat] / 2] <> "]*)", 
-    uuid1 = CreateUUID[], 
-    "codemirror", 
+  Map[callback[
+    #Text, 
+    #UUID, 
+    #Format, 
     Null, 
-    "Type" -> "input"
-  ]; 
-
-  callback[
-    StringTrim[StringJoin[Rest[lines]]], 
-    uuid = CreateUUID[], 
-    "markdown", 
-    Null, 
-    "Type" -> "output", 
-    "After" -> uuid1
-  ]; 
-  uuid1 = uuid; 
-
-  callback[
-    "(*answer[" <> ToString[Length[$chat] / 2] <> "]*)", 
-    uuid = CreateUUID[], 
-    "codemirror", 
-    Null, 
-    "Type" -> "input", 
-    "After" -> uuid1
-  ]; 
-  uuid1 = uuid;
-
-  Table[
-    callback[
-      i[["text"]],
-      uuid = CreateUUID[], 
-      i[["type"]],
-      Null, 
-      If[i[["type"]] == "codemirror", "Type" -> "input", "Type" -> "output"], 
-      "After" -> uuid1
-    ]; 
-    uuid1 = uuid; 
-    
-    If[i[["type"]] == "codemirror", 
-      callback[
-        "(*output*)", 
-        uuid = CreateUUID[], 
-        "codemirror", 
-        Null, 
-        "Type" -> "input", 
-        "After" -> uuid1
-      ]
-    ];
-    uuid1 = uuid;, 
-    
-    {i, str}
-  ]
+    "Type" -> #Type, 
+    "After" -> #After, 
+    "Props" -> <|"hidden" -> #Hidden|>
+  ]&] @ chatGPT[str]
 ];
 
 
@@ -94,8 +45,8 @@ $chat = {}
 
 
 chatGPT[query_String] := 
-Module[{result, userMessage, assistMessage, lines}, 
-  result = Check[
+Module[{answer, userMessage, assistMessage, lines}, 
+  answer = Check[
     userMessage = OpenAIChatMessageObject["user", query]; 
     AppendTo[$chat, userMessage]; 
     assistMessage = OpenAIChatComplete[$chat]; 
@@ -106,32 +57,76 @@ Module[{result, userMessage, assistMessage, lines},
     "<span style=\"color:red\">**Out of tokens. Chat history cleaned up.**</span>"
   ]; 
 
-  lines = StringSplit[result, "```"]; 
-  Table[
-    <|
-      "text" -> If[OddQ[i], StringTrim[lines[[i]]], toCode[lines[[i]]]], 
-      "type" -> If[OddQ[i], "markdown", "codemirror"]
-    |>, 
-    {i, 1, Length[lines]}
-  ]
+  toDialogData[query, answer]
 ]; 
 
 
-toCode[code_String] := 
-Module[{l = StringSplit[code, "\n"], f, r}, 
-  f = l[[1]]; 
-  r = StringRiffle[l[[2;;]], "\n"]; 
+toDialogData[query_String, answer_String] := 
+Module[{queryText, queryPair, uuid, answePair, blocks, answers, format}, 
+	queryText = StringTrim[StringJoin[Rest[StringSplit[query, EndOfLine]]]]; 	
+	
+	queryPair = dialogPair[
+		"#### Query[" <> ToString[Length[$chat]/2] <> "]:  \n" <> query, 
+		"markdown"
+	]; 
+	
+	blocks = StringSplit["#### Answer[" <> ToString[Length[$chat]/2] <> "]:  \n" <> answer, StartOfLine ~~ "```"]; 
+	uuid = queryPair[[-1, "UUID"]];
+	
+	answers = Table[
+		format = If[OddQ[i], "markdown", "codemirror"]; 
+		answePair = dialogPair[blocks[[i]], format, uuid]; 
+		uuid = answePair[[-1, "UUID"]]; 
+		answePair, 
+		{i, 1, Length[blocks]}
+	];
+	
+	Flatten[{
+		queryPair, 
+		answers
+	}]
+]
 
-  Which[
-    f === "js", ".js\n" <> r, 
-    f === "javascript", ".md\n" <> r, 
-    f === "markdown", ".md\n" <> r, 
-    f === "html", ".html\n" <> r, 
-    f === "wolfram", r,  
-    f === "mathematica", r, 
-    True, ".md\n```\n" <> f <> "\n" <> r <> "\n```"
-  ]
-]; 
+toCode[text_String] := 
+Module[{rest = StringTrim[StringJoin[Rest[StringSplit[text, "\n"]]]]}, 
+	Which[
+		StringMatchQ[text, {"md", "markdown"} ~~ __, IgnoreCase -> True], 
+			".md\n" <> rest, 
+			
+		StringMatchQ[text, {"js", "javascript"} ~~ __, IgnoreCase -> True], 
+			".js\n" <> rest, 
+			
+		StringMatchQ[text, {"html"} ~~ __, IgnoreCase -> True], 
+			".html\n" <> rest, 
+			
+		StringMatchQ[text, {"wolfram", "mathematica"} ~~ __, IgnoreCase -> True], 
+			rest, 
+			
+		True, 
+			".md\n```" <> text <> "\n```"
+	]
+]
+
+dialogPair[text_String, format_String, after_String: "Before"] := 
+Module[{uuid}, {
+	<|
+		"Text" -> If[format != "codemirror", ".md\n" <> text, toCode[text]], 
+		"Format" -> "codemirror", 
+		"Hidden" -> format != "codemirror", 
+		"Type" -> "input", 
+		"UUID" -> (uuid = CreateUUID[]), 
+		"After" -> after
+	|>, 
+	
+	If[format != "codemirror", <|
+		"Text" -> text, 
+		"Format" -> format, 
+		"Hidden" -> False, 
+		"Type" -> "output", 
+		"UUID" -> CreateUUID[], 
+		"After" -> uuid
+	|>, Nothing]
+}]; 
 
 
 DefaultSerializer = ExportByteArray[#, "ExpressionJSON"]&
