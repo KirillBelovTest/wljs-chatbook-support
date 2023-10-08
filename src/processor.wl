@@ -95,6 +95,9 @@ Module[{rest = StringTrim[StringJoin[Rest[StringSplit[text, "\n"]]]]},
 			
 		StringMatchQ[text, {"js", "javascript"} ~~ __, IgnoreCase -> True], 
 			".js\n" <> rest, 
+   
+  		StringMatchQ[text, {"mermaid"} ~~ __, IgnoreCase -> True], 
+			".mermaid\n" <> rest, 
 			
 		StringMatchQ[text, {"html"} ~~ __, IgnoreCase -> True], 
 			".html\n" <> rest, 
