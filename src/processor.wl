@@ -13,7 +13,7 @@ ChatbookQ[___] := False
 ChatbookQ[str_String] := StringMatchQ[str, StartOfString ~~ ".llm" ~~ __]
 
 
-ChatbookProcessor[expr_String, signature_String, callback_] := 
+ChatbookProcessor[expr_String, signature_String, parent_String, callback_] := 
 Module[{str, lines, params, uuid, uuid1}, 
   Print["ChatbookProcessor!"]; 
 
